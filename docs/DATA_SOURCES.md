@@ -1,7 +1,6 @@
 # DATA_SOURCES — origem e licença dos dados
 
-> Exigido pelo [ADR-009](technical-context/adr/ADR-009-licencas-de-dados-e-segredos.md) e pela regra CR-04
-> ([critical-rules.md](technical-context/briefing/critical-rules.md)). Dado externo **só é usado depois** de ter
+> Exigido pelo ADR-009 (licenças de dados e segredos) e pela regra crítica CR-04. Dado externo **só é usado depois** de ter
 > uma entrada aqui com a licença conferida.
 
 ## Regras de uso

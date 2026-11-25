@@ -13,7 +13,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "build": "tsup",
-    "playground": "node examples/playground/serve.mjs"
+    "playground": "node examples/playground/serve.mjs",
+    "db:up": "docker compose --env-file .env -f examples/nutrition-pack/db/docker-compose.yml up -d --wait",
+    "db:down": "docker compose --env-file .env -f examples/nutrition-pack/db/docker-compose.yml down",
+    "db:ping": "node --env-file=.env --import tsx examples/nutrition-pack/db/ping.ts"
   },
   "exports": {
     "./core": {
@@ -61,9 +64,13 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.10",
+    "@types/pg": "^8.23.1",
+    "drizzle-orm": "^0.45.4",
     "eslint": "^10.15.0",
+    "pg": "^8.23.1",
     "prettier": "^3.10.1",
     "tsup": "^9.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.74.0",
     "vitest": "^5.1.2"

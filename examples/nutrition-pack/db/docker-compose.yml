@@ -1,0 +1,27 @@
+# [Epic 003 · Conexão com o banco] Postgres local com a extensão pgvector. Decisão: ADR-011.
+# Uso: `pnpm db:up` (lê as variáveis do `.env` da raiz via --env-file). Nada de segredo neste arquivo (CR-04):
+# usuário, senha e banco vêm do ambiente, e a senha NÃO tem valor padrão — sem ela o Compose falha antes de subir.
+# A extensão (`CREATE EXTENSION vector`) é criada pelo adaptador pgvector (`ensureSchema`), não aqui.
+name: grounded-kit-db
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:?defina POSTGRES_DB no .env}
+    ports:
+      # Só na máquina local: o banco não fica exposto na rede.
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

@@ -4,16 +4,19 @@
  * erro) e CR-01 (este arquivo mora em `examples/`; o core não conhece banco nem Drizzle).
  *
  * Recebe o `env` por parâmetro (como `resolveDatasetDir`) para ser testável sem tocar em `process.env`.
- * Não há schema ainda: `db` é o cliente "cru"; quando o schema existir, passe-o em `drizzle({ client, schema })`.
+ * O `db` já conhece o schema (`./schema`), então `db.query.recipes...` e `db.select().from(foods)` saem tipados.
  */
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import * as schema from './schema';
+
+export type Db = NodePgDatabase<typeof schema>;
 
 /** Nome da variável de ambiente com a connection string da fonte da verdade (consta em `.env.example`). */
 export const DATABASE_URL_ENV = 'DATABASE_URL';
 
 export interface DbConnection {
-  db: NodePgDatabase;
+  db: Db;
   pool: Pool;
   /** Encerra o pool. Chame ao fim de scripts, ou o processo não termina. */
   close(): Promise<void>;
@@ -45,6 +48,6 @@ export function createDb(env: Record<string, string | undefined>): DbConnection 
   }
 
   const pool = new Pool({ connectionString });
-  const db = drizzle({ client: pool });
+  const db = drizzle({ client: pool, schema });
   return { db, pool, close: () => pool.end() };
 }

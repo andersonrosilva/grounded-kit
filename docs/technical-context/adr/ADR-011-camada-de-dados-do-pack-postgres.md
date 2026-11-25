@@ -17,8 +17,8 @@ do MVP; este ADR delimita a exceção em vez de revogar a regra.
 - **Acesso por Drizzle ORM sobre `pg`** (`createDb(env)` em `db/client.ts`), com a connection string em `DATABASE_URL`.
   Nunca logada nem incluída em mensagens de erro.
 - **`tsx`** executa os scripts TypeScript de `db/` (os imports do projeto são sem extensão).
-- **Dependências só de desenvolvimento:** `drizzle-orm`, `pg`, `@types/pg`, `tsx`. Versões fixadas pelo lockfile na
-  instalação. `drizzle-kit` (migrations) entra quando o schema for criado.
+- **Dependências só de desenvolvimento:** `drizzle-orm`, `drizzle-kit`, `pg`, `@types/pg`, `tsx`. Versões fixadas pelo lockfile na
+  instalação. `drizzle-kit` gera as migrations; elas são aplicadas por `migrate()` do Drizzle.
 - **Testes:** a suíte padrão continua sem banco e sem rede (ADR-010). Integração com o banco real é opt-in via `DATABASE_URL`
   (`describe.skipIf`).
 
@@ -26,7 +26,7 @@ do MVP; este ADR delimita a exceção em vez de revogar a regra.
 - (+) Fluxo realista (conexão, schema, seed, SELECT, reindexação) sem tocar o core.
 - (+) Reprodutível com um comando (`pnpm db:up`).
 - (−) Exige Docker na máquina de quem quiser rodar esta parte; quem não quiser continua usando `data.ts`.
-- (−) Quatro dependências de desenvolvimento a mais para acompanhar.
+- (−) Cinco dependências de desenvolvimento a mais para acompanhar.
 
 ## Alternativas consideradas
 - Migrations SQL puras + `pg` (mais SQL à mostra, sem ORM) e Prisma (exige `generate` e engine próprio): o autor escolheu Drizzle.

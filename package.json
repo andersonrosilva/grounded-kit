@@ -16,7 +16,10 @@
     "playground": "node examples/playground/serve.mjs",
     "db:up": "docker compose --env-file .env -f examples/nutrition-pack/db/docker-compose.yml up -d --wait",
     "db:down": "docker compose --env-file .env -f examples/nutrition-pack/db/docker-compose.yml down",
-    "db:ping": "node --env-file=.env --import tsx examples/nutrition-pack/db/ping.ts"
+    "db:ping": "node --env-file=.env --import tsx examples/nutrition-pack/db/ping.ts",
+    "db:generate": "drizzle-kit generate --config examples/nutrition-pack/db/drizzle.config.ts",
+    "db:migrate": "node --env-file=.env --import tsx examples/nutrition-pack/db/migrate.ts",
+    "db:seed": "node --env-file=.env --import tsx examples/nutrition-pack/db/seed.ts"
   },
   "exports": {
     "./core": {
@@ -65,6 +68,7 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.10",
     "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.11",
     "drizzle-orm": "^0.45.4",
     "eslint": "^10.15.0",
     "pg": "^8.23.1",

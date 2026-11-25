@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>grounded-kit · playground</title>
+    <meta
+      name="description"
+      content="Guia visual e playground interativo para consumir o grounded-kit (ai-kit): pipeline, domain packs, guardrails e RAG."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6fed'/%3E%3Cpath d='M9 16l5 5 9-10' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <a class="brand" href="#visao" aria-label="grounded-kit · início">
+          <span class="brand-mark" aria-hidden="true">✓</span>
+          <span class="brand-name">grounded-kit</span>
+          <span class="brand-sub">playground</span>
+        </a>
+        <nav class="tabs" id="tabs" aria-label="Seções">
+          <a href="#visao" data-tab="visao">Visão geral</a>
+          <a href="#passos" data-tab="passos">Passo a passo</a>
+          <a href="#playground" data-tab="playground">Playground</a>
+          <a href="#api" data-tab="api">Referência da API</a>
+        </nav>
+        <button
+          class="icon-btn"
+          id="theme-toggle"
+          type="button"
+          title="Alternar tema claro/escuro"
+          aria-label="Alternar tema"
+        >
+          ◐
+        </button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <!-- ===================================================== VISÃO GERAL -->
+      <section class="tab" id="tab-visao" hidden>
+        <div class="hero">
+          <p class="eyebrow">TypeScript · Node ≥ 22 · pnpm</p>
+          <h1>Um motor de IA reutilizável, agnóstico de domínio</h1>
+          <p class="lead">
+            O <strong>grounded-kit</strong> (pacote <code>ai-kit</code>) orquestra
+            <code>retrieve → generate → validate → moderate</code> com saída estruturada (Zod),
+            guardrails e RAG. O domínio entra por um <em>domain pack</em>; o motor nunca o conhece.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#passos">Ver passo a passo</a>
+            <a class="btn" href="#playground">Abrir o playground</a>
+            <a class="btn ghost" href="#api">Referência da API</a>
+          </div>
+        </div>
+
+        <div class="callout warn" role="note">
+          <strong>Estado atual: esqueleto didático.</strong>
+          Tipos, assinaturas e <code>exports</code> existem (e o <code>pnpm build</code> funciona),
+          mas toda função em <code>src/</code> ainda lança <code>not implemented</code>. Por isso o
+          <a href="#playground">playground</a> roda uma
+          <strong>simulação de referência (mock)</strong> escrita em JS puro que segue o roteiro
+          documentado em cada módulo — não é o código do kit. Os trechos do
+          <a href="#passos">passo a passo</a> são TypeScript real, checado contra os tipos do
+          <code>src/</code>.
+        </div>
+
+        <h2>O fluxo de uma chamada</h2>
+        <p class="muted">
+          Cada <code>pipeline.run(pack, input)</code> percorre estas etapas e termina em um de três
+          resultados.
+        </p>
+        <ol class="flow" aria-label="Etapas do pipeline">
+          <li class="flow-step">
+            <span class="flow-n">0</span><strong>Entrada</strong><span>TIn definido pelo pack</span>
+          </li>
+          <li class="flow-step">
+            <span class="flow-n">1</span><strong>PRE</strong
+            ><span>Guardrails <code>pre</code>. <em>block</em> não chama o modelo</span>
+          </li>
+          <li class="flow-step">
+            <span class="flow-n">2</span><strong>RETRIEVE</strong
+            ><span>RAG: <code>toQuery</code> → embeddings → <code>store.query(topK)</code></span>
+          </li>
+          <li class="flow-step">
+            <span class="flow-n">3</span><strong>GENERATE ⇄ VALIDATE</strong
+            ><span>até <code>maxAttempts</code>; erros viram feedback</span>
+          </li>
+          <li class="flow-step">
+            <span class="flow-n">4</span><strong>POST</strong
+            ><span>Guardrails <code>post</code>; <em>modify</em> é revalidado</span>
+          </li>
+          <li class="flow-step end">
+            <span class="flow-n">✓</span><strong>RunResult</strong
+            ><span><code>ok</code> · <code>blocked</code> · <code>invalid</code></span>
+          </li>
+        </ol>
+        <div class="outcomes">
+          <span class="pill ok">ok → data validada + usage</span>
+          <span class="pill warn">blocked → guardrail vetou (pre ou post)</span>
+          <span class="pill bad">invalid → esgotou as tentativas</span>
+          <span class="pill exc">ProviderError → exceção (infra), não consome tentativa</span>
+        </div>
+
+        <h2>Motor × domínio</h2>
+        <div class="grid two">
+          <article class="card">
+            <h3>O kit (motor)</h3>
+            <p class="muted">Só contratos (ports) e orquestração. Nada de domínio.</p>
+            <ul class="tight">
+              <li><code>Provider</code> — gera texto (Ollama, Gemini ou o seu)</li>
+              <li>
+                <code>Embeddings</code> + <code>VectorStore</code> — RAG (memória ou pgvector)
+              </li>
+              <li>
+                <code>Guardrail</code>, <code>Validator</code>, <code>Tracer</code> — pontos de
+                encaixe
+              </li>
+              <li><code>createPipeline</code> — o orquestrador</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>O domain pack (você)</h3>
+            <p class="muted">Declarado com <code>definePack</code>; é onde mora a política.</p>
+            <ul class="tight">
+              <li>Schema Zod de saída e prompts</li>
+              <li>Base de conhecimento + <code>toQuery</code></li>
+              <li>Validators (fatos por dado) e guardrails (política)</li>
+              <li>Exemplo no repo: <code>examples/nutrition-pack</code> (receitas)</li>
+            </ul>
+          </article>
+        </div>
+
+        <h2>Regras críticas</h2>
+        <div class="grid four" id="rules"></div>
+
+        <h2>Instalação rápida</h2>
+        <div class="codeblock" id="overview-install"></div>
+        <div class="callout info" role="note">
+          <strong>O que acontece hoje se você importar o kit:</strong> o build gera todos os
+          subpaths, mas chamar <code>definePack(...)</code> lança
+          <code>Error: not implemented</code> (verificado contra o <code>dist/</code>). A ordem de
+          implementação está no <code>README.md</code> da raiz (passos 1 a 6).
+        </div>
+      </section>
+
+      <!-- ===================================================== PASSO A PASSO -->
+      <section class="tab" id="tab-passos" hidden>
+        <div class="page-head">
+          <h1>Passo a passo de consumo</h1>
+          <p class="muted">
+            Do zero até o primeiro <code>pipeline.run</code>, com o pack de receitas/nutrição como
+            exemplo. Todos os trechos são TypeScript que compila contra os tipos reais do kit.
+          </p>
+        </div>
+        <div class="steps-layout">
+          <nav class="stepper" id="stepper" aria-label="Passos"></nav>
+          <div class="step-panel" id="step-panel"></div>
+        </div>
+      </section>
+
+      <!-- ===================================================== PLAYGROUND -->
+      <section class="tab" id="tab-playground" hidden>
+        <div class="page-head">
+          <h1>Playground</h1>
+          <p class="muted">
+            Configure o pack, roteirize as respostas do modelo e veja o pipeline decidir. O
+            resultado atualiza sozinho a cada mudança.
+          </p>
+        </div>
+
+        <div class="callout mock" role="note">
+          <span class="mock-badge">MODO MOCK</span>
+          <span>
+            Nenhuma API, chave ou rede é usada. O “modelo” é um <em>FakeProvider</em> roteirizado
+            por você e os embeddings são um fake determinístico; o pipeline é a reimplementação de
+            referência (<code>kit-sim.js</code>), não o <code>src/</code> do kit.
+          </span>
+        </div>
+
+        <div class="presets" id="presets" role="group" aria-label="Cenários prontos"></div>
+        <p class="muted small" id="preset-desc" aria-live="polite"></p>
+
+        <div class="pg-layout">
+          <form class="pg-form" id="pg-form" autocomplete="off" onsubmit="return false;">
+            <fieldset>
+              <legend>Entrada (TIn)</legend>
+              <label class="field">
+                <span>Pedido (<code>request</code>)</span>
+                <input type="text" id="f-request" />
+              </label>
+              <div class="field">
+                <span>Alérgenos declarados (<code>allergens</code>)</span>
+                <div class="chips" id="f-allergens"></div>
+                <input type="text" id="f-allergen-new" placeholder="outro alérgeno + Enter" />
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Resposta do modelo simulado</legend>
+              <label class="field">
+                <span>Roteiro (uma resposta por tentativa)</span>
+                <textarea id="f-script" rows="11" spellcheck="false"></textarea>
+              </label>
+              <p class="hint">
+                Separe as respostas com uma linha <code>---</code>. Uma resposta que começa com
+                <code>!error:</code> simula <code>ProviderError</code>. Roteiro esgotado = erro
+                claro, como no <code>FakeProvider</code>.
+              </p>
+            </fieldset>
+
+            <fieldset>
+              <legend>Pipeline (<code>PipelineDeps</code>)</legend>
+              <div class="row">
+                <label class="field"
+                  ><span><code>maxAttempts</code></span
+                  ><input type="number" id="f-max" min="1" max="6"
+                /></label>
+                <label class="field"
+                  ><span><code>topK</code></span
+                  ><input type="number" id="f-topk" min="1" max="6"
+                /></label>
+              </div>
+              <label class="check"
+                ><input type="checkbox" id="f-rag" /> RAG ligado (<code>embeddings</code> +
+                <code>store</code>)</label
+              >
+              <label class="field">
+                <span>Índice vetorial</span>
+                <select id="f-index">
+                  <option value="ok">compatível com os embeddings atuais</option>
+                  <option value="model">criado com outro modelo (precisa reindexar)</option>
+                  <option value="dim">criado com outra dimensão (precisa reindexar)</option>
+                </select>
+              </label>
+              <label class="field">
+                <span><code>tracer</code></span>
+                <select id="f-tracer">
+                  <option value="console">createConsoleTracer()</option>
+                  <option value="noop">createNoopTracer() (padrão)</option>
+                </select>
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Política do pack</legend>
+              <label class="check"
+                ><input type="checkbox" id="f-pre" /> Guardrail <code>pre</code>: bloqueia pedido
+                com alérgeno</label
+              >
+              <label class="check"
+                ><input type="checkbox" id="f-post" /> Guardrail <code>post</code>: bloqueia receita
+                com alérgeno</label
+              >
+              <label class="field">
+                <span>Guardrail <code>post</code> que modifica a saída</span>
+                <select id="f-modify">
+                  <option value="none">nenhum</option>
+                  <option value="valid">acrescenta aviso (continua válido)</option>
+                  <option value="broken">remove <code>steps</code> (quebra o schema)</option>
+                </select>
+              </label>
+              <label class="check"
+                ><input type="checkbox" id="f-validator" /> Validator: calorias ≈ tabela
+                nutricional</label
+              >
+              <label class="field">
+                <span>Tolerância do validator: <output id="f-tol-out"></output></span>
+                <input type="range" id="f-tol" min="0.02" max="0.5" step="0.01" />
+              </label>
+            </fieldset>
+
+            <div class="form-actions">
+              <button class="btn primary" type="button" id="btn-run">Executar pipeline</button>
+              <button class="btn ghost" type="button" id="btn-reset">Restaurar padrão</button>
+            </div>
+          </form>
+
+          <div class="pg-result" aria-live="polite">
+            <div id="result-card"></div>
+            <div class="metrics" id="metrics"></div>
+
+            <div class="subtabs" role="tablist" id="result-tabs">
+              <button type="button" role="tab" data-rt="timeline" class="active">
+                Linha do tempo
+              </button>
+              <button type="button" role="tab" data-rt="prompts">Prompts e respostas</button>
+              <button type="button" role="tab" data-rt="rag">Exemplos recuperados</button>
+              <button type="button" role="tab" data-rt="trace">Eventos do tracer</button>
+              <button type="button" role="tab" data-rt="code">Código equivalente</button>
+            </div>
+            <div id="result-body"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================== API -->
+      <section class="tab" id="tab-api" hidden>
+        <div class="page-head">
+          <h1>Referência da API pública</h1>
+          <p class="muted">
+            Tudo que o <code>package.json</code> exporta, por subpath, com assinaturas copiadas de
+            <code>src/</code> (arquivo:linha em cada item).
+          </p>
+        </div>
+        <div class="api-toolbar">
+          <input
+            type="search"
+            id="api-search"
+            placeholder="Buscar (ex.: definePack, Guardrail, topK…)"
+            aria-label="Buscar na API"
+          />
+          <div class="chips" id="api-filter" role="group" aria-label="Filtrar por subpath"></div>
+        </div>
+        <p class="muted small" id="api-count" aria-live="polite"></p>
+        <div id="api-list"></div>
+      </section>
+    </main>
+
+    <footer class="wrap footer">
+      <span
+        >grounded-kit playground · material didático; dados de exemplo sintéticos, sem
+        aconselhamento nutricional.</span
+      >
+    </footer>
+
+    <script src="kit-sim.js"></script>
+    <script src="nutrition-pack.js"></script>
+    <script src="content.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

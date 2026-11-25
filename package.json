@@ -1,0 +1,71 @@
+{
+  "name": "ai-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Motor de IA reutilizável e agnóstico de domínio: RAG, pipeline, guardrails e eval, com domain packs.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsup",
+    "playground": "node examples/playground/serve.mjs"
+  },
+  "exports": {
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js",
+      "require": "./dist/core/index.cjs"
+    },
+    "./providers/ollama": {
+      "types": "./dist/providers/ollama/index.d.ts",
+      "import": "./dist/providers/ollama/index.js",
+      "require": "./dist/providers/ollama/index.cjs"
+    },
+    "./providers/gemini": {
+      "types": "./dist/providers/gemini/index.d.ts",
+      "import": "./dist/providers/gemini/index.js",
+      "require": "./dist/providers/gemini/index.cjs"
+    },
+    "./retrieval": {
+      "types": "./dist/retrieval/index.d.ts",
+      "import": "./dist/retrieval/index.js",
+      "require": "./dist/retrieval/index.cjs"
+    },
+    "./retrieval/pgvector": {
+      "types": "./dist/retrieval/pgvector/index.d.ts",
+      "import": "./dist/retrieval/pgvector/index.js",
+      "require": "./dist/retrieval/pgvector/index.cjs"
+    },
+    "./quality": {
+      "types": "./dist/quality/index.d.ts",
+      "import": "./dist/quality/index.js",
+      "require": "./dist/quality/index.cjs"
+    },
+    "./ops": {
+      "types": "./dist/ops/index.d.ts",
+      "import": "./dist/ops/index.js",
+      "require": "./dist/ops/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.10",
+    "eslint": "^10.15.0",
+    "prettier": "^3.10.1",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.74.0",
+    "vitest": "^5.1.2"
+  }
+}

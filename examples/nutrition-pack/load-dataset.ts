@@ -15,7 +15,9 @@
  *
  * Treino (ordem sugerida):
  *  1. `resolveDatasetDir`: leia `PACK_DATA_DIR` do `env` recebido (não de `process.env` direto, para testar);
- *     vazio/ausente => `undefined`; preenchido mas a pasta não existe => erro explícito dizendo o caminho.
+ *     vazio/ausente => `undefined`; preenchido mas a pasta não existe => erro explícito dizendo o caminho já
+ *     RESOLVIDO. Caminho relativo vale a partir do diretório de trabalho (ex.: `./data/taco`); no Windows, um caminho
+ *     começando com `/` aponta para a raiz do drive atual, não para a pasta do projeto.
  *  2. `readCsvRows`: decida como parsear CSV (campos com vírgula entre aspas, quebras de linha dentro de campo).
  *     Escrever um parser mínimo e testá-lo é exercício válido; adotar uma biblioteca é decisão de dependência
  *     (registre num ADR se for adotar). Devolva linhas como `Record<string, string>` pelo cabeçalho.
@@ -27,10 +29,19 @@
  *     o lookup do validator e dos guardrails de alérgenos use a mesma regra dos dois lados.
  *  5. Respeite `maxItems`: embeddings custam uma chamada por lote; comece com 200–500 itens.
  *
- * Decisões que dependem do dataset escolhido (preencha ao escolher, junto com `docs/DATA_SOURCES.md`):
- *  - nomes reais das colunas => `ColumnMap`;
- *  - unidade da energia (kcal por 100 g? por porção?) — converta para kcal/100 g ou não use a tabela;
- *  - idioma do texto (consulta e receitas devem estar no mesmo idioma, ou o modelo de embeddings precisa ser multilíngue).
+ * Dataset escolhido: TACO (Kaggle), só para a tabela nutricional — ver `docs/DATA_SOURCES.md`, fonte 2.
+ *  - colunas e unidade: `TACO_FOOD_COLUMNS` (kcal já por 100 g, sem conversão);
+ *  - idioma: português. Receitas e mapa de alérgenos são sintéticos em português (`data.ts`), então os nomes dos
+ *    alimentos casam com os da TACO; a TACO não tem alérgenos nem receitas;
+ *  - formato real do `taco-db-nutrientes.csv` (conferido no arquivo baixado): UTF-8, sem aspas e sem vírgula dentro
+ *    de campo; cabeçalho com espaço depois de cada vírgula e vírgula final; linhas com 13 a 15 campos (vírgula final
+ *    em quase todas); nomes e valores com espaços sobrando, inclusive duplos ("Coco  verde cru"). Logo `readCsvRows`
+ *    precisa fazer trim de cabeçalhos e valores, ignorar campos extras vazios, e o nome deve ter os espaços normalizados;
+ *  - `Energia (kcal)`: 590 de 597 linhas são numéricas; as 7 restantes não têm valor utilizável: `NA` (2), vazio (1)
+ *    e `*` (4; pela legenda da TACO, "análises em reavaliação"). Todas devem descartar o alimento e contar em
+ *    `skipped`. O `Tr` (traço) aparece em outros nutrientes, não em kcal;
+ *  - `loadKnowledgeFromDataset` fica sem dataset real por ora (não há fonte de receitas em português); ele serve
+ *    quando houver uma, e por isso `RecipeColumnMap` continua sem preenchimento.
  */
 import type { KnowledgeItem } from '../../src/retrieval';
 import type { NutritionFact } from './data';
@@ -61,6 +72,14 @@ export interface FoodColumnMap {
   allergens?: string;
   allergenSeparator?: string;
 }
+
+/** Mapeamento do arquivo `taco-db-nutrientes.csv` da TACO (docs/DATA_SOURCES.md, fonte 2). Sem alérgenos. */
+export const TACO_FOOD_COLUMNS: FoodColumnMap = {
+  file: 'taco-db-nutrientes.csv',
+  name: 'Nome',
+  energy: 'Energia (kcal)',
+  unit: 'kcal-per-100g',
+};
 
 export interface LoadOptions {
   /** Teto de itens carregados (embeddings custam). Padrão à sua escolha; sugestão: 500. */

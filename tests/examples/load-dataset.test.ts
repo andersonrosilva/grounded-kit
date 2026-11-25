@@ -24,4 +24,10 @@ describe('loadNutritionTableFromDataset', () => {
   it.todo('normaliza a chave do alimento (minúsculas, sem acento, sem espaços nas pontas)');
   it.todo('converte kcal por porção ou recusa a coluna, conforme o ColumnMap');
   it.todo('separa alérgenos pelo separador configurado');
+  it.todo('com TACO_FOOD_COLUMNS: lê Nome e Energia (kcal) de um CSV no formato da TACO');
+  it.todo(
+    'célula NA, vazia ou * (em reavaliação) na energia descarta o alimento e conta em skipped',
+  );
+  it.todo('cabeçalho com espaços depois das vírgulas e vírgula final é lido corretamente (trim)');
+  it.todo('espaços duplos e nas pontas do nome do alimento são normalizados');
 });

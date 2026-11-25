@@ -8,6 +8,9 @@ coverage/
 .env.*
 !.env.example
 
+# Datasets de terceiros baixados localmente (ex.: Kaggle): nunca versionar (CR-04, ADR-009)
+/data/
+
 # Estado local do Cortex (gerado a partir do disco por cada dev)
 docs/.cortex/sessions-manifest.json
 .claude/settings.json

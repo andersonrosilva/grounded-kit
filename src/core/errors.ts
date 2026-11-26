@@ -13,7 +13,9 @@ export class ProviderError extends Error {
 
   constructor(message: string, providerId: string, cause?: unknown) {
     super(message);
-    throw new Error('not implemented');
+    this.name = 'ProviderError';
+    this.providerId = providerId;
+    this.cause = cause;
   }
 }
 
@@ -23,6 +25,7 @@ export class PackDefinitionError extends Error {
 
   constructor(message: string, issues: readonly string[]) {
     super(message);
-    throw new Error('not implemented');
+    this.name = 'PackDefinitionError';
+    this.issues = Object.freeze(issues);
   }
 }

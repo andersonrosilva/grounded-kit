@@ -23,7 +23,12 @@ export interface KnowledgeDeps {
 }
 
 export function assertCompatibleIndex(store: VectorStore, embeddings: Embeddings): void {
-  throw new Error('not implemented');
+  if (store.info.embeddingsId !== embeddings.id) {
+    throw new Error(`Id incompatível: ${store.info.embeddingsId} vs ${embeddings.id} (reindexar)`);
+  }
+  if (store.info.dimensions !== embeddings.dimensions) {
+    throw new Error(`Dimensão incompatível: ${store.info.dimensions} vs ${embeddings.dimensions} (reindexar)`);
+  }  
 }
 
 export function indexKnowledge<TIn, TOut>(

@@ -17,10 +17,35 @@ export type GuardrailRun =
   | { action: 'block'; reason: string; guardrailId: string }
   | { action: 'modify'; output: unknown; guardrailId: string };
 
-export function runGuardrails<TIn, TOut>(
+export async function runGuardrails<TIn, TOut>(
   guardrails: readonly Guardrail<TIn, TOut>[] | undefined,
   stage: GuardrailStage,
   ctx: GuardrailContext<TIn, TOut>,
 ): Promise<GuardrailRun> {
-  throw new Error('not implemented');
+  const filteredGuardrails = (guardrails ?? []).filter((g) => g.stage === stage);
+  //const filteredGuardrails = guardrails?.filter((g) => g.stage === stage);
+  
+  if (filteredGuardrails && filteredGuardrails.length === 0) {
+    return { action: 'allow' };
+  }
+
+  let lastModify: GuardrailRun | null = null;
+  let current = ctx;
+
+  for (const g of filteredGuardrails ?? []) {
+    const verdict = await g.check(current);
+    if (verdict.action === 'block') {
+      return { action: 'block', reason: verdict.reason, guardrailId: g.id };
+    }
+    if (verdict.action === 'modify') {
+      current = { ...current, output: verdict.output as TOut };
+      lastModify = { action: 'modify', output: verdict.output, guardrailId: g.id };
+    }
+  }
+
+  if (lastModify) {
+    return lastModify;
+  }
+
+  return { action: 'allow' };
 }

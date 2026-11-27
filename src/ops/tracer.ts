@@ -23,10 +23,27 @@ export interface ConsoleTracerOptions {
   log?: (line: string) => void;
 }
 
+/** Chaves que carregam conteúdo (prompt, resposta, mensagens): nunca saem do tracer (regra 12). */
+const CONTENT_KEYS: ReadonlySet<string> = new Set(['prompt', 'text', 'output', 'system', 'errors']);
+
 export function createNoopTracer(): Tracer {
-  throw new Error('not implemented');
+  return {
+    event() {},
+  };
 }
 
 export function createConsoleTracer(options?: ConsoleTracerOptions): Tracer {
-  throw new Error('not implemented');
+  const log = options?.log ?? console.log;
+
+  return {
+    event(name, data) {
+      const safe: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (!CONTENT_KEYS.has(key)) {
+          safe[key] = value;
+        }
+      }
+      log(JSON.stringify({ event: name, ...safe }));
+    },
+  };
 }

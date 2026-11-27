@@ -9,19 +9,62 @@
  *    vira o feedback de retry enviado ao modelo.
  *  - `runValidators`: roda todos os validators e devolve a lista de mensagens de falha (vazia = tudo certo).
  */
+import { z } from 'zod';
 import type { ZodType } from 'zod';
 import type { Validator } from '../core/types';
 
 export type ParseOutcome<T> = { ok: true; data: T } | { ok: false; errors: string[] };
 
 export function parseStructuredOutput<T>(text: string, schema: ZodType<T>): ParseOutcome<T> {
-  throw new Error('not implemented');
+  if (!text || text.trim() === '') {
+    return { ok: false, errors: ['Saída vazia'] };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return { ok: false, errors: ['Falha ao parsear JSON'] };
+  }
+
+  const result = schema.safeParse(parsed);
+
+  if (!result.success) {
+    return { ok: false, errors: formatSchemaErrors(result.error) };
+  }
+
+  return { ok: true, data: result.data };
 }
 
 export function formatSchemaErrors(error: unknown): string[] {
-  throw new Error('not implemented');
+  if (error instanceof z.ZodError) {
+    return error.issues.map((issue) => {
+      const path = issue.path.join('.');
+      return path ? `${path}: ${issue.message}` : issue.message;
+    });
+  }
+
+  if (error instanceof Error) {
+    return [error.message];
+  }
+
+  return [String(error)];
 }
 
 export function runValidators<T>(data: T, validators: readonly Validator<T>[]): string[] {
-  throw new Error('not implemented');
+  if (validators.length === 0) {
+    return [];
+  }
+
+  const errors: string[] = [];
+
+  for (const validator of validators) {
+    const result = validator.validate(data);
+    
+    if (!result.ok) {
+      errors.push(result.error);
+    }
+  }
+  
+  return errors;
 }
